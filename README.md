@@ -1,7 +1,7 @@
 # dezero
 
 
-# Testing rules
+# Testing commands
 
 For single testing \n
 $ python3 -m unittest '....py'
