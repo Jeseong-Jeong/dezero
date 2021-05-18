@@ -2,6 +2,10 @@ import numpy as np
 
 class Variable:
 	def __init__(self, data):
+		if data is not None:
+			if not isinstance(data, np.ndarray):
+				raise TypeError(f'{type(data)}은(는) 지원하지 않습니다.')
+
 		self.data = data
 		self.grad = None
 		self.creator = None
@@ -10,12 +14,15 @@ class Variable:
 		self.creator = func
 
 	def backward(self):
+		if self.grad is None:
+			self.grad = np.ones_like(self.data)
+
 		funcs = [self.creator]
 		while funcs:
 			f = funcs.pop()
 			x, y = f.input, f.output
 			x.grad = f.backward(y.grad)
-			
+
 			if x.creator is not None:
 				funcs.append(x.creator)
 
@@ -23,7 +30,7 @@ class Function:
 	def __call__(self, input):
 		x = input.data
 		y = self.forward(x)
-		output = Variable(y)
+		output = Variable(as_array(y))
 		output.set_creator(self) # 출력 변수에 창조자를 설정한다.
 		self.input = input 
 		self.output = output # 출력도 저장한다.
@@ -34,6 +41,11 @@ class Function:
 		
 	def backward(self, gy):
 		raise NotImplementedError()
+
+def as_array(x):
+	if np.isscalar(x):
+		return np.array(x)
+	return x
 
 class Square(Function):
 	def forward(self, x):
@@ -55,41 +67,14 @@ class Exp(Function):
 		gx = np.exp(x) * gy
 		return gx
 
+def square(x):
+	return Square()(x)
+
+def exp(x):
+	return Exp()(x)
+
 if __name__ == '__main__':
-	A = Square()
-	B = Exp()
-	C = Square()
-
 	x = Variable(np.array(0.5))
-	a = A(x)
-	b = B(a)
-	y = C(b)
-
-	assert y.creator == C
-	assert y.creator.input == b
-	assert y.creator.input.creator == B
-	assert y.creator.input.creator.input == a
-	assert y.creator.input.creator.input.creator == A
-	assert y.creator.input.creator.input.creator.input == x
-
-	# 역전파 도전!
-	y.grad = np.array(1.0)
-
-	C = y.creator
-	b = C.input
-	b.grad = C.backward(y.grad)
-
-	B = b.creator
-	a = B.input
-	a.grad = B.backward(b.grad)
-
-	A = a.creator
-	x = A.input
-	x.grad = A.backward(a.grad)
-
-	print(x.grad)
-
-	# 재귀로 자동화!
-	y.grad = np.array(1.0)
+	y = square(exp(square(x)))
 	y.backward()
 	print(x.grad)
