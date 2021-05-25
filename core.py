@@ -27,16 +27,18 @@ class Variable:
 				funcs.append(x.creator)
 
 class Function:
-	def __call__(self, inputs):
+	def __call__(self, *inputs):
 		xs = [x.data for x in inputs]
-		ys = self.forward(xs)
+		ys = self.forward(*xs)
+		if not isinstance(ys, tuple):
+			ys = (ys, )
 		outputs = [Variable(as_array(y)) for y in ys]
 
 		for output in outputs:
 			output.set_creator(self) # 출력 변수에 창조자를 설정한다.
 		self.inputs = inputs 
 		self.outputs = outputs # 출력도 저장한다.
-		return outputs
+		return outputs if len(outputs) > 1 else outputs[0]
 	
 	def forward(self, xs):
 		raise NotImplementedError()
@@ -77,10 +79,9 @@ class Exp(Function):
 		return gx
 
 class Add(Function):
-	def forward(self, xs):
-		x0, x1 = xs
+	def forward(self, x0, x1):
 		y = x0 + x1
-		return (y,)
+		return y
 		
 
 def square(x):
@@ -89,9 +90,15 @@ def square(x):
 def exp(x):
 	return Exp()(x)
 
+def add(x0, x1):
+	return Add()(x0, x1)
+
 if __name__ == '__main__':
-	xs = [Variable(np.array(2.0)), Variable(np.array(3.0))]
+	x0 = Variable(np.array(2.0))
+	x1 = Variable(np.array(3.0))
 	f = Add()
-	ys = f(xs)
-	y = ys[0]
+	y = f(x0, x1)
+	print(y.data)
+
+	y = add(x0, x1)
 	print(y.data)
