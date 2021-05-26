@@ -83,6 +83,22 @@ class Add(Function):
 		y = x0 + x1
 		return y
 		
+class Multiply(Function):
+	def forward(self, x0, x1):
+		y = x0 * x1
+		return y
+
+class Subtract(Function):
+	def forward(self, x0, x1):
+		y = x0 - x1
+		return y
+
+class Divide(Function):
+	def forward(self, x0, x1):
+		if x1 == 0:
+			raise ValueError("Cannot divide by zero")
+		y = x0 / x1
+		return y
 
 def square(x):
 	return Square()(x)
@@ -93,6 +109,15 @@ def exp(x):
 def add(x0, x1):
 	return Add()(x0, x1)
 
+def multiply(x0, x1):
+	return Multiply()(x0, x1)
+
+def subtract(x0, x1):
+	return Subtract()(x0, x1)
+
+def divide(x0, x1):
+	return Divide()(x0, x1)
+
 if __name__ == '__main__':
 	x0 = Variable(np.array(2.0))
 	x1 = Variable(np.array(3.0))
@@ -102,3 +127,15 @@ if __name__ == '__main__':
 
 	y = add(x0, x1)
 	print(y.data)
+
+	y = multiply(x0, x1)
+	print(y.data)
+
+	y = subtract(x0, x1)
+	print(y.data)
+
+	y = divide(x0, x1)
+	print(y.data)
+
+	x1.data = 0
+	y = divide(x0, x1)
