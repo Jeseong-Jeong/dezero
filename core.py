@@ -26,10 +26,16 @@ class Variable:
 				gxs = (gxs,)
 
 			for x, gx in zip(f.inputs, gxs):
-				x.grad = gx
+				if x.grad == None:
+					x.grad = gx
+				else:
+					x.grad = x.grad + gx
 
 				if x.creator is not None:
 					funcs.append(x.creator)
+
+	def cleargrad(self):
+		self.grad = None
 
 class Function:
 	def __call__(self, *inputs):
@@ -142,13 +148,14 @@ def divide(x0, x1):
 	return Divide()(x0, x1)
 
 if __name__ == '__main__':
-	x0 = Variable(np.array(2.0))
-	x1 = Variable(np.array(3.0))
-	x2 = Variable(np.array(4.0))
-	y = subtract(multiply(square(x0), square(x1)), divide(exp(x0), x2))
+	x = Variable(np.array(2.0))
+	y = subtract(add(x, x), x)
 	y.backward()
 	print(y.data)
-	print(x0.grad)
-	print(x1.grad)
-	print(x2.grad)
+	print(x.grad)
 
+	x.cleargrad()
+	y = exp(x)
+	y.backward()
+	print(y.data)
+	print(x.grad)
