@@ -9,15 +9,27 @@ class Variable:
 		self.data = data
 		self.grad = None
 		self.creator = None
+		self.generation = 0
 
 	def set_creator(self, func):
 		self.creator = func
+		self.generation = func.generation + 1
 
 	def backward(self):
 		if self.grad is None:
 			self.grad = np.ones_like(self.data)
 
-		funcs = [self.creator]
+		funcs = []
+		seen_set = set()
+
+		def add_func(f):
+			if f not in seen_set:
+				funcs.append(f)
+				seen_set.add(f)
+				funcs.sort(key=lambda x: x.generation)
+
+		add_func(self.creator)
+		
 		while funcs:
 			f = funcs.pop()
 			gys = [output.grad for output in f.outputs]
@@ -32,7 +44,7 @@ class Variable:
 					x.grad = x.grad + gx
 
 				if x.creator is not None:
-					funcs.append(x.creator)
+					add_func(x.creator)
 
 	def cleargrad(self):
 		self.grad = None
@@ -45,6 +57,7 @@ class Function:
 			ys = (ys, )
 		outputs = [Variable(as_array(y)) for y in ys]
 
+		self.generation = max([x.generation for x in inputs])
 		for output in outputs:
 			output.set_creator(self) # 출력 변수에 창조자를 설정한다.
 		self.inputs = inputs 
@@ -149,13 +162,9 @@ def divide(x0, x1):
 
 if __name__ == '__main__':
 	x = Variable(np.array(2.0))
-	y = subtract(add(x, x), x)
+	a = square(x)
+	y = add(square(a), square(a))
 	y.backward()
-	print(y.data)
-	print(x.grad)
 
-	x.cleargrad()
-	y = exp(x)
-	y.backward()
 	print(y.data)
 	print(x.grad)
