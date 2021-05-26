@@ -27,7 +27,7 @@ class Variable:
 
 			for x, gx in zip(f.inputs, gxs):
 				x.grad = gx
-				
+
 				if x.creator is not None:
 					funcs.append(x.creator)
 
@@ -79,7 +79,7 @@ class Exp(Function):
 		return y
 	
 	def backward(self, gy):
-		x = self.input.data
+		x = self.inputs[0].data
 		gx = np.exp(x) * gy
 		return gx
 
@@ -96,10 +96,18 @@ class Multiply(Function):
 		y = x0 * x1
 		return y
 
+	def backward(self, gy):
+		x1 = self.inputs[0].data
+		x2 = self.inputs[1].data
+		return x2 * gy, x1 * gy
+
 class Subtract(Function):
 	def forward(self, x0, x1):
 		y = x0 - x1
 		return y
+
+	def backward(self, gy):
+		return gy, -gy
 
 class Divide(Function):
 	def forward(self, x0, x1):
@@ -107,6 +115,13 @@ class Divide(Function):
 			raise ValueError("Cannot divide by zero")
 		y = x0 / x1
 		return y
+
+	def backward(self, gy):
+		x0 = self.inputs[0].data
+		x1 = self.inputs[0].data
+		gx0 = gy / x1
+		gx1 = - x0 / x1 ** 2 * gy
+		return gx0, gx1
 
 def square(x):
 	return Square()(x)
@@ -127,11 +142,13 @@ def divide(x0, x1):
 	return Divide()(x0, x1)
 
 if __name__ == '__main__':
-	x = Variable(np.array(2.0))
-	y = Variable(np.array(3.0))
-	z = add(square(x), square(y))
-	z.backward()
-	print(z.data)
-	print(x.grad)
-	print(y.grad)
+	x0 = Variable(np.array(2.0))
+	x1 = Variable(np.array(3.0))
+	x2 = Variable(np.array(4.0))
+	y = subtract(multiply(square(x0), square(x1)), divide(exp(x0), x2))
+	y.backward()
+	print(y.data)
+	print(x0.grad)
+	print(x1.grad)
+	print(x2.grad)
 
