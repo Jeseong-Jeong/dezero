@@ -1,5 +1,6 @@
 import numpy as np
 import weakref
+from memory_profiler import profile
 
 class Variable:
 	def __init__(self, data):
