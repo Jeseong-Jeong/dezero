@@ -4,15 +4,25 @@ from memory_profiler import profile
 import contextlib
 
 class Variable:
-	def __init__(self, data):
+	def __init__(self, data, name=None):
 		if data is not None:
 			if not isinstance(data, np.ndarray):
 				raise TypeError(f'{type(data)}은(는) 지원하지 않습니다.')
 
 		self.data = data
+		self.name = name
 		self.grad = None
 		self.creator = None
 		self.generation = 0
+
+	def __len__(self):
+		return len(self.data)
+
+	def __repr__(self):
+		if self.data is None:
+			return 'variable(None)'
+		p = str(self.data).replace('\n', '\n' + ' ' * 9)
+		return 'variable(' + p + ')'
 
 	def set_creator(self, func):
 		self.creator = func
@@ -55,6 +65,22 @@ class Variable:
 
 	def cleargrad(self):
 		self.grad = None
+
+	@property
+	def shape(self):
+		return self.data.shape
+
+	@property
+	def ndim(self):
+		return self.data.ndim
+
+	@property
+	def size(self):
+		return self.data.size
+
+	@property
+	def dtype(self):
+		return self.data.dtype
 
 class Function:
 	def __call__(self, *inputs):
@@ -185,16 +211,5 @@ def divide(x0, x1):
 	return Divide()(x0, x1)
 
 if __name__ == '__main__':
-	x0 = Variable (np.array(1.0))
-	x1 = Variable(np.array (1.0))
-	
-	with no_grad():
-		t = add(x0, x1)
-		y = add(x0, t)
-		print(y.data)
-	
-	t = add(x0, x1)
-	y = add(x0, t)
-	y.backward()
-	print (y.grad , t.grad)
-	print (x0.grad , x1.grad)
+	x = Variable (np.array([[1, 2], [3, 4]]))
+	print(x)
