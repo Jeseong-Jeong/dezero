@@ -1,4 +1,5 @@
 import numpy as np
+import weakref
 
 class Variable:
 	def __init__(self, data):
@@ -32,7 +33,7 @@ class Variable:
 		
 		while funcs:
 			f = funcs.pop()
-			gys = [output.grad for output in f.outputs]
+			gys = [output().grad for output in f.outputs]
 			gxs = f.backward(*gys)
 			if not isinstance(gxs, tuple):
 				gxs = (gxs,)
@@ -61,7 +62,7 @@ class Function:
 		for output in outputs:
 			output.set_creator(self) # 출력 변수에 창조자를 설정한다.
 		self.inputs = inputs 
-		self.outputs = outputs # 출력도 저장한다.
+		self.outputs = [weakref.ref(output) for output in outputs]
 		return outputs if len(outputs) > 1 else outputs[0]
 	
 	def forward(self, xs):
@@ -161,10 +162,11 @@ def divide(x0, x1):
 	return Divide()(x0, x1)
 
 if __name__ == '__main__':
-	x = Variable(np.array(2.0))
-	a = square(x)
-	y = add(square(a), square(a))
-	y.backward()
-
-	print(y.data)
-	print(x.grad)
+	@profile
+	def my_func():
+		list = []
+		for i in range(100):
+			x = Variable(np.random.randn(10000))
+			y = square(square(x))
+		
+	my_func()
