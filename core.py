@@ -4,6 +4,8 @@ from memory_profiler import profile
 import contextlib
 
 class Variable:
+	__array_prioriy__ = 200
+
 	def __init__(self, data, name=None):
 		if data is not None:
 			if not isinstance(data, np.ndarray):
@@ -23,12 +25,6 @@ class Variable:
 			return 'variable(None)'
 		p = str(self.data).replace('\n', '\n' + ' ' * 9)
 		return 'variable(' + p + ')'
-
-	def __add__(self, other):
-		return add(self, other)
-
-	def __mul__(self, other):
-		return multiply(self, other)
 
 	def set_creator(self, func):
 		self.creator = func
@@ -90,6 +86,8 @@ class Variable:
 
 class Function:
 	def __call__(self, *inputs):
+		inputs = [as_variable(x) for x in inputs]
+
 		xs = [x.data for x in inputs]
 		ys = self.forward(*xs)
 		if not isinstance(ys, tuple):
@@ -130,6 +128,11 @@ def as_array(x):
 	if np.isscalar(x):
 		return np.array(x)
 	return x
+
+def as_variable(obj):
+	if isinstance(obj, Variable):
+		return obj
+	return Variable(obj)
 
 def numerical_diff(f, x, eps=1e-4):
 	x0 = Variable(x.data - eps)
@@ -205,23 +208,32 @@ def exp(x):
 	return Exp()(x)
 
 def add(x0, x1):
+	x1 = as_array(x1)
 	return Add()(x0, x1)
 
 def multiply(x0, x1):
+	x1 = as_array(x1)
 	return Multiply()(x0, x1)
 
 def subtract(x0, x1):
+	x1 = as_array(x1)
 	return Subtract()(x0, x1)
 
 def divide(x0, x1):
+	x1 = as_array(x1)
 	return Divide()(x0, x1)
 
+Variable.__add__ = add
+Variable.__radd__ = add
+Variable.__mul__ = multiply
+Variable.__rmul__ = multiply
+
 if __name__ == '__main__':
-	x = Variable (np.array(3))
-	y = Variable (np.array(4))
-	c = x * y + x
-	print(c)
-	c.backward()
+	x = Variable(np.array(3))
+	a = np.array(2)
+	y = a * x + 1
+	print(y)
+	y.backward()
 
 	print(x.grad)
 	print(y.grad)
