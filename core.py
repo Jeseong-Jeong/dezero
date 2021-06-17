@@ -24,6 +24,12 @@ class Variable:
 		p = str(self.data).replace('\n', '\n' + ' ' * 9)
 		return 'variable(' + p + ')'
 
+	def __add__(self, other):
+		return add(self, other)
+
+	def __mul__(self, other):
+		return multiply(self, other)
+
 	def set_creator(self, func):
 		self.creator = func
 		self.generation = func.generation + 1
@@ -211,5 +217,11 @@ def divide(x0, x1):
 	return Divide()(x0, x1)
 
 if __name__ == '__main__':
-	x = Variable (np.array([[1, 2], [3, 4]]))
-	print(x)
+	x = Variable (np.array(3))
+	y = Variable (np.array(4))
+	c = x * y + x
+	print(c)
+	c.backward()
+
+	print(x.grad)
+	print(y.grad)
