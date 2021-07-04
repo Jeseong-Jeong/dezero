@@ -161,6 +161,13 @@ class Exp(Function):
 		gx = np.exp(x) * gy
 		return gx
 
+class Neg(Function):
+	def forward(self, x):
+		return -x
+
+	def backward(self, gy):
+		return -gy
+
 class Add(Function):
 	def forward(self, x0, x1):
 		y = x0 + x1
@@ -201,11 +208,28 @@ class Divide(Function):
 		gx1 = - x0 / x1 ** 2 * gy
 		return gx0, gx1
 
+class Pow(Function):
+	def __init__(self, c):
+		self.c = c
+
+	def forward(self, x):
+		y = x ** self.c
+		return y
+
+	def backward(self, gy):
+		x = self.inputs[0].data
+		c = self.c
+		gx = c * x ** (c - 1) * gy
+		return gx
+
 def square(x):
 	return Square()(x)
 
 def exp(x):
 	return Exp()(x)
+
+def neg(x):
+	return Neg()(x)
 
 def add(x0, x1):
 	x1 = as_array(x1)
@@ -219,21 +243,36 @@ def subtract(x0, x1):
 	x1 = as_array(x1)
 	return Subtract()(x0, x1)
 
+def rsubtract(x0, x1):
+	x1 = as_array(x1)
+	return Subtract()(x1, x0)
+
 def divide(x0, x1):
 	x1 = as_array(x1)
 	return Divide()(x0, x1)
 
+def rdivide(x0, x1):
+	x1 = as_array(x1)
+	return Divide()(x1, x0)
+
+def pow(x, c):
+	return Pow(c)(x)
+
+Variable.__neg__ = neg
 Variable.__add__ = add
 Variable.__radd__ = add
 Variable.__mul__ = multiply
 Variable.__rmul__ = multiply
+Variable.__rmul__ = multiply
+Variable.__sub__ = subtract
+Variable.__rsub__ = rsubtract
+Variable.__truediv__ = divide
+Variable.__rtruediv__ = rdivide
+Variable.__pow__ = pow
 
 if __name__ == '__main__':
 	x = Variable(np.array(3))
-	a = np.array(2)
-	y = a * x + 1
-	print(y)
-	y.backward()
-
+	a = x ** 3
+	print(a)
+	a.backward()
 	print(x.grad)
-	print(y.grad)
