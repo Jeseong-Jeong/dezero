@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from core import Variable, square, exp, numerical_diff
+from dezero.core_simple import Variable, square, exp, numerical_diff
 
 class SquareTest(unittest.TestCase):
 	def test_forward(self):
