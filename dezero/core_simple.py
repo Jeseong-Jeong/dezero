@@ -258,17 +258,18 @@ def rdivide(x0, x1):
 def pow(x, c):
 	return Pow(c)(x)
 
-Variable.__neg__ = neg
-Variable.__add__ = add
-Variable.__radd__ = add
-Variable.__mul__ = multiply
-Variable.__rmul__ = multiply
-Variable.__rmul__ = multiply
-Variable.__sub__ = subtract
-Variable.__rsub__ = rsubtract
-Variable.__truediv__ = divide
-Variable.__rtruediv__ = rdivide
-Variable.__pow__ = pow
+def setup_variable():
+	Variable.__neg__ = neg
+	Variable.__add__ = add
+	Variable.__radd__ = add
+	Variable.__mul__ = multiply
+	Variable.__rmul__ = multiply
+	Variable.__rmul__ = multiply
+	Variable.__sub__ = subtract
+	Variable.__rsub__ = rsubtract
+	Variable.__truediv__ = divide
+	Variable.__rtruediv__ = rdivide
+	Variable.__pow__ = pow
 
 if __name__ == '__main__':
 	x = Variable(np.array(3))
